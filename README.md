@@ -67,6 +67,39 @@ Use `python3 -m unittest discover -s tests -v` when your system does not provide
 
 The tests cover fresh state, input normalization, movement costs, blocked movement, one-time items and decisions, both item gates, energy limits, win/loss outcomes, replay isolation, quitting, and post-game immutability.
 
+## Acceptance checklist
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Title, instructions, and player name | Pass | `main()` prints the title/help and calls `new_game(name)` |
+| Repeating menu until win, loss, or quit | Pass | `play_one_game()` loops while `game_over` is false |
+| Five required locations | Pass | `LOCATIONS` contains Beach, Jungle, Cave, Old Bridge, and Lighthouse |
+| Energy, location, and inventory | Pass | All are stored in the player dictionary |
+| Two one-time useful objects | Pass | Rope and lantern pickups reject duplicates |
+| Three consequential decisions | Pass | Coconut restores energy, campfire rest restores energy, and reef swimming costs energy |
+| Inventory gates | Pass | Rope gates the bridge and lantern gates the beacon |
+| Invalid input recovery | Pass | `resolve_choice()` rejects invalid input without changing player state |
+| Clear outcomes and replay | Pass | Win/loss messages are returned and replay calls `new_game()` |
+| Automated acceptance tests | Pass | 23 `unittest` tests cover all T1–T10 rules and bug-hunter cases |
+
+## Function guide
+
+The code is split so terminal input/output and game decisions have separate jobs:
+
+- `new_game()` builds a fresh player dictionary, inventory list, and flags dictionary.
+- `available_actions()` creates the choices appropriate for the current location.
+- `resolve_choice()` normalizes a number or word typed by the player into an action key.
+- `apply_action()` routes a validated action to the matching rule.
+- `can_cross_bridge()` and `can_light_beacon()` return booleans for the two item gates.
+- `is_win()` and `is_loss()` report the current outcome without printing anything.
+- `_move()`, `_take_item()`, `_eat_coconut()`, `_rest()`, `_swim_reef()`, and `_light_beacon()` each apply one game rule.
+- `_location_named()` performs a case-insensitive location lookup, while `_result()` creates consistent action results.
+- `state_snapshot()` makes an independent copy used to prove rejected actions changed nothing.
+- `show_menu()` prints the current scene and numbered choices.
+- `play_one_game()` owns the main `while` loop and stops when `game_over` becomes true.
+- `ask_to_replay()` accepts only yes/no replay input.
+- `main()` starts the program and creates a new state for each replay.
+
 ## Project structure
 
 - `main.py` owns terminal input, output, menus, and replay.
@@ -93,3 +126,7 @@ The tests cover fresh state, input normalization, movement costs, blocked moveme
 2. **Validate before mutation** → Rejected actions should leave every state field unchanged → Took deep snapshots before invalid and blocked actions in tests → Checking requirements first makes failures safe and predictable.
 
 The concept I understand now that I did not before is that separating pure game rules from `input()` and `print()` makes each rule reproducible and easy to test with a specific state.
+
+## Real-world connection
+
+This project is a small state machine, the same pattern used by onboarding flows, troubleshooting assistants, interactive training scenarios, and order-status systems. The player dictionary is the current state, the menu offers valid transitions, `apply_action()` enforces business rules, and the tests prove invalid transitions do not corrupt the state. For example, a safety-training simulator could replace locations with training stages, inventory with completed certifications, energy with an attempt limit, and the locked bridge with a stage that cannot open until required training is complete.

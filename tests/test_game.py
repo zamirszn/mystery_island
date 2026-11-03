@@ -109,6 +109,25 @@ class MysteryIslandTests(unittest.TestCase):
         apply_action(player, "reef")
         self.assertEqual(0, player["energy"])
 
+    def test_reef_costs_two_energy_and_returns_to_beach(self):
+        player = new_game("Ada")
+        result = apply_action(player, "reef")
+        self.assertTrue(result["ok"])
+        self.assertEqual("Beach", player["location"])
+        self.assertEqual(3, player["energy"])
+
+    def test_final_move_to_lighthouse_at_zero_energy_is_a_loss(self):
+        player = new_game("Ada")
+        player["location"] = "Old Bridge"
+        player["energy"] = 1
+        player["inventory"].append("rope")
+        result = apply_action(player, "move:lighthouse")
+        self.assertTrue(result["ok"])
+        self.assertEqual("Lighthouse", player["location"])
+        self.assertEqual(0, player["energy"])
+        self.assertTrue(is_loss(player))
+        self.assertFalse(player["won"])
+
     def test_lantern_can_only_be_collected_once(self):
         player = new_game("Ada")
         apply_action(player, "move:jungle")
@@ -147,6 +166,13 @@ class MysteryIslandTests(unittest.TestCase):
         self.assertTrue(apply_action(player, "rest")["ok"])
         self.assertEqual(4, player["energy"])
         self.assertFalse(apply_action(player, "rest")["ok"])
+
+    def test_look_inventory_and_help_do_not_change_state(self):
+        player = new_game("Ada")
+        before = state_snapshot(player)
+        for action in ("look", "inventory", "help"):
+            self.assertTrue(apply_action(player, action)["ok"])
+            self.assertEqual(before, player)
 
     def test_choice_parser_accepts_numbers_words_and_rejects_bad_input(self):
         player = new_game("Ada")
